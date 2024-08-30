@@ -50,14 +50,14 @@ int main(int argc, char **argv)
     vector<double> X = {1, 3, 4, 5};
     // flatten the matrix A
 
-    vector<double> flattened_A(n * n);
-    for (int i = 0; i < n; i++)
-    {
-        for (int j = 0; j < n; j++)
-        {
-            flattened_A[i * n + j] = A[i][j];
-        }
-    }
+ //   vector<double> flattened_A(n * n);
+ //   for (int i = 0; i < n; i++)
+//    {
+ //       for (int j = 0; j < n; j++)
+   //     {
+    //        flattened_A[i * n + j] = A[i][j];
+  //      }
+   // }
     vector<double> B(n);
     matrix_vec_multiplication(n, flattened_A, X, B, MPI_COMM_WORLD);
 
