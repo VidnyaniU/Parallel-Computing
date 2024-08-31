@@ -28,38 +28,76 @@ void matrix_vec_multiplication(int n, vector<double> &flattened_A, vector<double
     }
 
     MPI_Gather(local_result.data(), num_of_rows_per_proc, MPI_DOUBLE, B.data(), num_of_rows_per_proc, MPI_DOUBLE, 0, comm);
-    if (rank == 0)
-    {
-        cout << "OUTPUT :: ";
-        for (int i = 0; i < n; i++)
-        {
-
-            cout << B[i] << " ";
-        }
-        cout << endl;
-    }
 }
 
 int main(int argc, char **argv)
 {
     MPI_Init(&argc, &argv);
-    // input
-    int n = 4;
-    vector<vector<double>> A = {
-        {1, 2, 3, 4}, {7, 2, 3, 4}, {9, 1, 3, 5}, {1, 2, 9, 5}};
-    vector<double> X = {1, 3, 4, 5};
-    // flatten the matrix A
 
- //   vector<double> flattened_A(n * n);
- //   for (int i = 0; i < n; i++)
-//    {
- //       for (int j = 0; j < n; j++)
-   //     {
-    //        flattened_A[i * n + j] = A[i][j];
-  //      }
-   // }
+    int n;
+    vector<vector<double>> A;
+    vector<double> X;
+
+    // Read input from file
+    ifstream infile("matrix_vec_input.txt");
+    if (infile.is_open())
+    {
+        infile >> n;
+        A.resize(n, vector<double>(n));
+        X.resize(n);
+
+        for (int i = 0; i < n; i++)
+        {
+            for (int j = 0; j < n; j++)
+            {
+                infile >> A[i][j];
+            }
+        }
+
+        for (int i = 0; i < n; i++)
+        {
+            infile >> X[i];
+        }
+
+        infile.close();
+    }
+    else
+    {
+        cerr << "Unable to open input file" << endl;
+        
+    }
+
+    
+    vector<double> flattened_A(n * n);
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            flattened_A[i * n + j] = A[i][j];
+        }
+    }
+
     vector<double> B(n);
     matrix_vec_multiplication(n, flattened_A, X, B, MPI_COMM_WORLD);
+
+    
+    if (rank == 0)
+    {
+        ofstream outfile("matrix_vec_output.txt");
+        if (outfile.is_open())
+        {
+            for (int i = 0; i < n; i++)
+            {
+                outfile << B[i] << " ";
+            }
+            outfile << endl;
+            outfile.close();
+        }
+        else
+        {
+            cerr << "Unable to open output file" << endl;
+        }
+    }
 
     MPI_Finalize();
     return 0;
