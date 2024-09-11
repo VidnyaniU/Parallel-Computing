@@ -67,7 +67,7 @@ int main(int argc, char **argv)
     vector<double> X_old(n, 0); // Initial guess for X
     MPI_Bcast(X_old.data(), n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-    double tolerence = 0.00000001;
+    double tolerence = 0.000000001;
     int iterations = 1000;
     vector<double> X_new_local(k);
 
