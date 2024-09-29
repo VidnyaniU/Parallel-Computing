@@ -17,7 +17,6 @@ void matrixMultiply(vector<double> A_sub, vector<double> B_sub, vector<double> C
     }
 }
 
-//bruh bruh bruh bruh bruh bruh bruh bruh bruh bruh bruh bruh bruh bruh bruh bruh bruh bruh bruh bruh bruh bruh 
 int main(int argc, char **argv)
 {
     int rank, size;
@@ -50,7 +49,6 @@ int main(int argc, char **argv)
             // }
         }
         cout << endl;
-        
 
         cout << "From processor :: " << rank << "\nSubmatrix B :: " << endl;
         for (int i = 0; i < sub_size * sub_size; i++)
