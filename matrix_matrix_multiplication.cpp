@@ -38,28 +38,28 @@ int main(int argc, char **argv)
     MPI_Scatter(A.data(), sub_size * sub_size, MPI_DOUBLE, A_sub.data(), sub_size * sub_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     MPI_Scatter(B.data(), sub_size * sub_size, MPI_DOUBLE, B_sub.data(), sub_size * sub_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-    if (rank == 0)
-    {
-        cout << "From processor :: " << rank << "\nSubmatrix A :: " << endl;
-        for (int i = 0; i < sub_size * sub_size; i++)
-        {
-            // for (int j = 0; j < sub_size; j++)
-            // {
-            cout << A_sub[i] << " ";
-            // }
-        }
-        cout << endl;
+    // if (rank == 0)
+    // {
+    //     cout << "From processor :: " << rank << "\nSubmatrix A :: " << endl;
+    //     for (int i = 0; i < sub_size * sub_size; i++)
+    //     {
+    //         // for (int j = 0; j < sub_size; j++)
+    //         // {
+    //         cout << A_sub[i] << " ";
+    //         // }
+    //     }
+    //     cout << endl;
 
-        cout << "From processor :: " << rank << "\nSubmatrix B :: " << endl;
-        for (int i = 0; i < sub_size * sub_size; i++)
-        {
-            // for (int j = 0; j < ; j++)
-            // {
-            cout << B_sub[i] << " ";
-            // }
-        }
-        cout << endl;
-    }
+    //     cout << "From processor :: " << rank << "\nSubmatrix B :: " << endl;
+    //     for (int i = 0; i < sub_size * sub_size; i++)
+    //     {
+    //         // for (int j = 0; j < ; j++)
+    //         // {
+    //         cout << B_sub[i] << " ";
+    //         // }
+    //     }
+    //     cout << endl;
+    // }
     MPI_Finalize();
 
     return 0;
