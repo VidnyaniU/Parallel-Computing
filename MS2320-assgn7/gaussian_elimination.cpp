@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
     gaussian_elimination(A, b, rank, size);
     back_substitution(A, b, x, rank, size);
 
-    // The root process prints the solution vector x
+    // solution vector x
     if (rank == 0)
     {
         cout << "Solution vector x using " << size << " processors : ";
