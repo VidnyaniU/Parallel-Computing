@@ -1,5 +1,3 @@
-
-
 #include <bits/stdc++.h>
 #include <mpi.h>
 using namespace std;
@@ -35,16 +33,6 @@ void multiplyMatrices(vector<vector<double>> &A, vector<vector<double>> &B, vect
     }
 }
 
-void addMatrices(vector<vector<double>> &A, vector<vector<double>> &B, vector<vector<double>> &C, int n)
-{
-    for (int i = 0; i < n; i++)
-    {
-        for (int j = 0; j < n; j++)
-        {
-            C[i][j] = A[i][j] + B[i][j];
-        }
-    }
-}
 int main(int argc, char **argv)
 {
     int rank, size;
@@ -87,40 +75,21 @@ int main(int argc, char **argv)
             cout << "Error: Number of processors should be 4." << endl;
             MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
         }
-
-        // cout << "Matrix A :: " << endl;
-
-        // for (int i = 0; i < n; ++i)
-        // {
-        //     for (int j = 0; j < n; ++j)
-        //     {
-        //         cout << A[i][j] << " ";
-        //     }
-        //     cout << endl;
-        // }
-        // cout << "Matrix B :: " << endl;
-        // for (int i = 0; i < n; ++i)
-        // {
-        //     for (int j = 0; j < n; ++j)
-        //     {
-        //         cout << B[i][j] << " ";
-        //     }
-        //     cout << endl;
-        // }
     }
     vector<double> flattened_A = flattenMatrix(A);
     vector<double> flattened_B = flattenMatrix(B);
 
+    //================================C00 & C11===================================================================================================================================
     vector<vector<double>> local_A(block_size, vector<double>(block_size));
     vector<vector<double>> local_B(block_size, vector<double>(block_size));
-    vector<vector<double>> local_C(block_size, vector<double>(block_size));
+    vector<vector<double>> Aij(block_size, vector<double>(block_size));
 
     int send_count[size], displacement_arr[size];
     displacement_arr[0] = 0;
     for (int i = 0; i < size; i++)
         send_count[i] = size;
 
-    // displacements for Scatterv
+    // displacement array for Scatterv A
     for (int i = 0; i < size; i++)
     {
         int row = i / (int)sqrt(size);
@@ -131,7 +100,6 @@ int main(int argc, char **argv)
     for (int j = 0; j < size; j++)
     {
         MPI_Scatterv(flattened_A.data(), send_count, displacement_arr, MPI_DOUBLE, local_A[j].data(), block_size * block_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-        // MPI_Scatterv(flattened_B.data(), send_count, displacement_arr, MPI_DOUBLE, local_B[j].data(), block_size * block_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
         for (int i = 0; i < size; i++)
         {
@@ -146,7 +114,7 @@ int main(int argc, char **argv)
     for (int i = 0; i < size; i++)
         send_count_B[i] = size;
 
-    // displacements for Scatterv
+    // displacement array for Scatterv B
     for (int i = 0; i < size; i++)
     {
         int row = i / (int)sqrt(size);
@@ -156,7 +124,6 @@ int main(int argc, char **argv)
 
     for (int j = 0; j < size; j++)
     {
-        // MPI_Scatterv(flattened_A.data(), send_count, displacement_arr, MPI_DOUBLE, local_A[j].data(), block_size * block_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
         MPI_Scatterv(flattened_B.data(), send_count_B, displacement_arr_B, MPI_DOUBLE, local_B[j].data(), block_size * block_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
         for (int i = 0; i < size; i++)
@@ -165,110 +132,203 @@ int main(int argc, char **argv)
         }
     }
 
-    multiplyMatrices(local_A, local_B, local_C, block_size);
+    multiplyMatrices(local_A, local_B, Aij, block_size);
 
-    // vector<double> flattened_local_A = flattenMatrix(local_A);
-    // vector<double> flattened_local_B = flattenMatrix(local_B);
-    if (rank == 2)
+    vector<double> C(block_size * block_size);
+
+    vector<double> flattened_Aij = flattenMatrix(Aij);
+
+    if (rank == 1)
     {
-        cout << "Matrix A :: " << endl;
-        cout << "\nProcess " << rank << " received: " << endl;
-        for (int i = 0; i < block_size; ++i)
-        {
-            for (int j = 0; j < block_size; ++j)
-            {
-                cout << local_A[i][j] << " ";
-            }
-            cout << endl;
-        }
-        cout << endl;
-
-        cout << "Matrix B :: " << endl;
-        cout << "\nProcess " << rank << " received: " << endl;
-        for (int i = 0; i < block_size; ++i)
-        {
-            for (int j = 0; j < block_size; ++j)
-            {
-                cout << local_B[i][j] << " ";
-            }
-            cout << endl;
-        }
-        cout << endl;
-
-        cout << "Matrix C :: " << endl;
-        cout << "\nProcess " << rank << " received: " << endl;
-        for (int i = 0; i < block_size; ++i)
-        {
-            for (int j = 0; j < block_size; ++j)
-            {
-                cout << local_C[i][j] << " ";
-            }
-            cout << endl;
-        }
-        cout << endl;
+        MPI_Send(flattened_Aij.data(), block_size * block_size, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
     }
-    /*
-    // Assuming n is the dimension of the matrices and size is the number of processes
-    vector<double> gathered_A_G(n * n); // Allocate space for the final gathered result
-    vector<double> gathered_B_G(n * n); // Allocate space for the final gathered result
-
-    // Prepare the send_count and displacement arrays
-    int send_count_g[size];
-    int displacement_arr_g[size];
-
-    for (int i = 0; i < size; i++)
-    {
-        send_count_g[i] = block_size * block_size; // Each process sends block_size * block_size elements
-    }
-
-    // Set the displacements for gathering
-    for (int i = 0; i < size; i++)
-    {
-        int row = i / (int)sqrt(size);
-        int col = i % (int)sqrt(size);
-        displacement_arr_g[i] = (row * block_size * n) + (col * block_size);
-    }
-
-    // Gather the resulting matrix C from all processes
-    MPI_Gatherv(local_A[0].data(), block_size * block_size, MPI_DOUBLE,
-                gathered_A_G.data(), send_count_g, displacement_arr_g, MPI_DOUBLE,
-                0, MPI_COMM_WORLD);
-    MPI_Gatherv(local_B[0].data(), block_size * block_size, MPI_DOUBLE,
-                gathered_B_G.data(), send_count_g, displacement_arr_g, MPI_DOUBLE,
-                0, MPI_COMM_WORLD);
-
+    vector<double> C11(block_size * block_size);
+    vector<double> C00(block_size * block_size);
     if (rank == 0)
     {
+        MPI_Recv(C.data(), block_size * block_size, MPI_DOUBLE, 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-        cout << "Gathered_A_G :: " << endl;
+        cout << "C00 :: " << endl;
+        for (int i = 0; i < block_size; i++)
+        {
+            for (int j = 0; j < block_size; j++)
+            {
+                C00[i * block_size + j] = flattened_Aij[i * block_size + j] + C[i * block_size + j];
+                cout << C00[i * block_size + j] << " ";
+            }
+            cout << endl;
+        }
+        cout << endl;
+
+        // receive C11
+
+        MPI_Recv(C11.data(), block_size * block_size, MPI_DOUBLE, 2, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        cout << "C11 :: " << endl;
+        for (int i = 0; i < block_size; i++)
+        {
+            for (int j = 0; j < block_size; j++)
+            {
+                cout << C11[i * block_size + j] << " ";
+            }
+            cout << endl;
+        }
+        cout << endl;
+    }
+    if (rank == 3)
+    {
+        MPI_Send(flattened_Aij.data(), block_size * block_size, MPI_DOUBLE, 2, 1, MPI_COMM_WORLD);
+    }
+    if (rank == 2)
+    {
+        MPI_Recv(C.data(), block_size * block_size, MPI_DOUBLE, 3, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+        for (int i = 0; i < block_size; i++)
+        {
+            for (int j = 0; j < block_size; j++)
+            {
+                C11[i * block_size + j] = flattened_Aij[i * block_size + j] + C[i * block_size + j];
+            }
+        }
+        MPI_Send(C11.data(), block_size * block_size, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD);
+    }
+
+    //================================================================================================================================
+
+    //==============================C01 & C10==================================================================================================
+
+    // scattering matrix B differently than previous one to get C01 and C10
+    //  for matrix B
+    vector<vector<double>> local_B2(block_size, vector<double>(block_size));
+
+    int send_count_B2[size], displacement_arr_B2[size] = {4, 36, 0, 32};
+    for (int i = 0; i < size; i++)
+        send_count_B2[i] = block_size;
+
+    for (int j = 0; j < size; j++)
+    {
+        MPI_Scatterv(flattened_B.data(), send_count_B2, displacement_arr_B2, MPI_DOUBLE, local_B2[j].data(), block_size * block_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+        for (int i = 0; i < size; i++)
+        {
+            displacement_arr_B2[i] += n;
+        }
+    }
+    vector<vector<double>> Aij2(block_size, vector<double>(block_size));
+
+    multiplyMatrices(local_A, local_B2, Aij2, block_size);
+
+    vector<double> C2(block_size * block_size);
+
+    vector<double> flattened_Aij2 = flattenMatrix(Aij2);
+
+    if (rank == 1)
+    {
+        MPI_Send(flattened_Aij2.data(), block_size * block_size, MPI_DOUBLE, 0, 4, MPI_COMM_WORLD);
+    }
+    vector<double> C10(block_size * block_size);
+    vector<double> C01(block_size * block_size);
+    if (rank == 0)
+    {
+        MPI_Recv(C2.data(), block_size * block_size, MPI_DOUBLE, 1, 4, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        cout << "C01 :: " << endl;
+
+        for (int i = 0; i < block_size; i++)
+        {
+            for (int j = 0; j < block_size; j++)
+            {
+                C01[i * block_size + j] = flattened_Aij2[i * block_size + j] + C2[i * block_size + j];
+                cout << C01[i * block_size + j] << " ";
+            }
+            cout << endl;
+        }
+        cout << endl;
+
+        // receive C10
+
+        MPI_Recv(C10.data(), block_size * block_size, MPI_DOUBLE, 2, 5, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        cout << "C10:: " << endl;
+        for (int i = 0; i < block_size; i++)
+        {
+            for (int j = 0; j < block_size; j++)
+            {
+                cout << C10[i * block_size + j] << " ";
+                /* code */
+            }
+            cout << endl;
+        }
+        cout << endl;
+    }
+    if (rank == 3)
+    {
+        MPI_Send(flattened_Aij2.data(), block_size * block_size, MPI_DOUBLE, 2, 1, MPI_COMM_WORLD);
+    }
+    if (rank == 2)
+    {
+        MPI_Recv(C2.data(), block_size * block_size, MPI_DOUBLE, 3, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+
+        for (int i = 0; i < block_size; i++)
+        {
+            for (int j = 0; j < block_size; j++)
+            {
+                C10[i * block_size + j] = flattened_Aij2[i * block_size + j] + C2[i * block_size + j];
+            }
+        }
+        MPI_Send(C10.data(), block_size * block_size, MPI_DOUBLE, 0, 5, MPI_COMM_WORLD);
+    }
+    //==============================================================================================================================
+
+    // final matrix C
+    if (rank == 0)
+    {
+        vector<vector<double>> final_C(n, vector<double>(n));
+        // C00
+        for (int j = 0; j < block_size; j++)
+        {
+            for (int k = 0; k < block_size; k++)
+            {
+                final_C[j][k] = C00[j * block_size + k];
+            }
+        }
+
+        // C01
+        for (int j = 0; j < block_size; j++)
+        {
+            for (int k = 0; k < block_size; k++)
+            {
+                final_C[j][k + block_size] = C01[j * block_size + k];
+            }
+        }
+
+        // C10
+        for (int j = 0; j < block_size; j++)
+        {
+            for (int k = 0; k < block_size; k++)
+            {
+                final_C[j + block_size][k] = C10[j * block_size + k];
+            }
+        }
+
+        // C11
+        for (int j = 0; j < block_size; j++)
+        {
+            for (int k = 0; k < block_size; k++)
+            {
+                final_C[j + block_size][k + block_size] = C11[j * block_size + k];
+            }
+        }
+
+        cout << "Final matrix C :: " << endl;
         for (int i = 0; i < n; i++)
         {
             for (int j = 0; j < n; j++)
             {
-                cout << gathered_A_G[i * n + j] << " ";
+                cout << final_C[i][j] << " ";
             }
             cout << endl;
         }
         cout << endl;
     }
-    // Add matrices A and B on the root process
-    // if (rank == 0)
-    // {
-    //     vector<vector<double>> final_C(n, vector<double>(n, 0.0));
-
-    //     // addMatrices(gathered_A_G, gathered_B_G, final_C, n);
-
-    //     cout << "Final Matrix C (A + B):" << endl;
-    //     for (int i = 0; i < n; ++i)
-    //     {
-    //         for (int j = 0; j < n; ++j)
-    //         {
-    //             cout << final_C[i][j] << " ";
-    //         }
-    //         cout << endl;
-    //     }
-    // }
-    */
     MPI_Finalize();
     return 0;
 }
