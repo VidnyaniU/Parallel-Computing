@@ -43,6 +43,9 @@ int main(int argc, char **argv)
 
     int n = 8; // size of matrix
 
+    vector<vector<double>> A(n, vector<double>(n)), B(n, vector<double>(n));
+    vector<vector<double>> final_C(n, vector<double>(n, 0)); // Initialize final result matrix
+sssss
     MPI_Finalize();
     return 0;
 }
