@@ -45,7 +45,32 @@ int main(int argc, char **argv)
 
     vector<vector<double>> A(n, vector<double>(n)), B(n, vector<double>(n));
     vector<vector<double>> final_C(n, vector<double>(n, 0)); // Initialize final result matrix
-sssss
+    if (rank == 0)
+    {
+        ifstream fin("matrix_matrix_mul_input.txt");
+        if (!fin)
+        {
+            cerr << "Error opening file." << endl;
+            MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+        }
+
+        // Read matrices A and B from file
+        for (int i = 0; i < n; ++i)
+            for (int j = 0; j < n; ++j)
+                fin >> A[i][j];
+
+        for (int i = 0; i < n; ++i)
+            for (int j = 0; j < n; ++j)
+                fin >> B[i][j];
+
+        fin.close();
+
+        if (size != 4)
+        {
+            cout << "Error: Number of processors should be 4." << endl;
+            MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+        }
+    }
     MPI_Finalize();
     return 0;
 }
