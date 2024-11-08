@@ -71,6 +71,8 @@ int main(int argc, char **argv)
             MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
         }
     }
+    // Broadcast matrix B to all processes
+    MPI_Bcast(B.data(), n * n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     MPI_Finalize();
     return 0;
 }
