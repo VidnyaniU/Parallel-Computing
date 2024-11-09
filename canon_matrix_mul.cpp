@@ -73,6 +73,9 @@ int main(int argc, char **argv)
     }
     // Broadcast matrix B to all processes
     MPI_Bcast(B.data(), n * n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    int block_size = n / sqrt(size);
+    vector<double> local_A(block_size * n);    // Each process will receive block_size rows
+    vector<double> local_C(block_size * n, 0); // Initialize local C
     MPI_Finalize();
     return 0;
 }
