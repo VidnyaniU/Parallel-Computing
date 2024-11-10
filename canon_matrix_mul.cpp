@@ -76,6 +76,9 @@ int main(int argc, char **argv)
     int block_size = n / sqrt(size);
     vector<double> local_A(block_size * n);    // Each process will receive block_size rows
     vector<double> local_C(block_size * n, 0); // Initialize local C
+    // Scatter rows of A to all processes
+    MPI_Scatter(A.data(), block_size * n, MPI_DOUBLE, local_A.data(), block_size * n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
     MPI_Finalize();
     return 0;
 }
