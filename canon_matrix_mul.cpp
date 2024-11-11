@@ -78,7 +78,11 @@ int main(int argc, char **argv)
     vector<double> local_C(block_size * n, 0); // Initialize local C
     // Scatter rows of A to all processes
     MPI_Scatter(A.data(), block_size * n, MPI_DOUBLE, local_A.data(), block_size * n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
+    // Convert local_A to a 2D vector for easier multiplication
+    vector<vector<double>> local_A_2D(block_size, vector<double>(n));
+    for (int i = 0; i < block_size; ++i)
+        for (int j = 0; j < n; ++j)
+            local_A_2D[i][j] = local_A[i * n + j];
     MPI_Finalize();
     return 0;
 }
