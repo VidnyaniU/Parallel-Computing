@@ -83,6 +83,10 @@ int main(int argc, char **argv)
     for (int i = 0; i < block_size; ++i)
         for (int j = 0; j < n; ++j)
             local_A_2D[i][j] = local_A[i * n + j];
+
+            // Perform local matrix multiplication
+    vector<vector<double>> local_C_2D(block_size, vector<double>(n));
+    multiplyMatrices(local_A_2D, B, local_C_2D, block_size);
     MPI_Finalize();
     return 0;
 }
